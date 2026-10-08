@@ -365,3 +365,31 @@ ax.axhline(0, color="gray", lw=.5); ax.axvline(0, color="gray", lw=.5)
 ax.set_xlabel("Built value (draft, trades, free agency, contracts, fringe pipeline, penalties), z-score"); ax.set_ylabel("Results (point differential + playoff success), z-score")
 ax.set_title("NBA franchises 1991-2026: what they built vs what they won\n(dot size = championships)"); plt.tight_layout(); plt.savefig(OUT + "franchise_map.png", dpi=130)
 print("\nDone. Files are in:", OUT)
+
+# ---------------- season detail for the dashboard: roster + moves for every franchise-season ----------------
+R = A.copy(); R["salary"] = R.share * R.year.map(cap) / 1e6          # cap share x that year's cap, in $ millions
+tr_to = set(zip(TR.pid, TR.year, TR.to))
+first_nba = agg.groupby("pid").year.min()
+def how(r):
+    if first_nba.get(r.pid) == r.year: return "Rookie"
+    if (r.pid, r.year, r.tm) in tr_to: return "Trade"
+    if r.is_fa: return "Free agent"
+    return "Arrived" if r.arrival else ""
+R["how"] = [how(r) for r in R.itertuples()]
+R = R[R.tm.isin(Panel.tm.unique()) & R.year.between(1991, LAST) & R.mp.notna()]
+R = R.sort_values(["tm", "year", "mp"], ascending=[True, True, False]).groupby(["tm", "year"]).head(13)
+disp = agg.drop_duplicates("pid").set_index("pid").name_display
+R["player"] = R.pid.map(lambda p: disp.get(p, pid_name.get(p, p)))
+keepc = [c for c in ["tm", "year", "player", "age", "games", "mp", "wins_added", "salary", "how"] if c in R.columns]
+R[keepc].round(2).to_csv(OUT + "roster_by_season.csv", index=False)
+def tx_kind(s):
+    for k, v in [("traded", "Trade"), ("drafted", "Draft"), ("10-day", None), ("Exhibit 10", None), ("two-way", None), ("waived", None), ("released", None), ("signed", "Signing"), ("fired", "Staff"), ("hired", "Staff"), ("resigns", "Staff"), ("named", "Staff")]:
+        if k in s: return v
+    return None
+TXo = TX.assign(kind=TX.txt.map(tx_kind)).dropna(subset=["kind"])
+TXo = TXo[TXo.teams.map(len) >= 1]
+rows = []
+for r in TXo.itertuples():
+    for t in dict.fromkeys(r.teams): rows.append((t, r.y, r.kind, r.txt[:280]))
+pd.DataFrame(rows, columns=["tm", "year", "kind", "text"]).drop_duplicates().to_csv(OUT + "team_moves.csv", index=False)
+print("Season detail written: roster_by_season.csv, team_moves.csv")
