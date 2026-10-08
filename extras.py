@@ -109,5 +109,7 @@ A["d"] = A.wa_next - A.wa; A["age"] = A.age.clip(19, 38).round()
 cv = A.groupby("age").d.agg(["mean", "count"]); cv = cv[cv["count"] >= 15]
 curve = {int(a): round(float(v), 2) for a, v in cv["mean"].rolling(3, center=True, min_periods=1).mean().items()}
 
-json.dump({"players": players, "needs": needs, "metrics": [[m[0], m[1], m[2], m[4], m[5]] for m in METRICS], "off": off, "stories": stories, "curve": curve}, open(os.path.join(OUT, "extras.json"), "w"), separators=(",", ":"), ensure_ascii=False)
+import windowfo
+wf = windowfo.compute(D, DATA, OUT, fr, curve, nn)
+json.dump({"players": players, "needs": needs, "metrics": [[m[0], m[1], m[2], m[4], m[5]] for m in METRICS], "off": off, "stories": stories, "curve": curve, **wf}, open(os.path.join(OUT, "extras.json"), "w"), separators=(",", ":"), ensure_ascii=False)
 print(f"extras.json written: {len(players)} rosters, {len(needs)} profiles, {len(off['moves'])} offseason moves, {len(off['picks'])} picks")
