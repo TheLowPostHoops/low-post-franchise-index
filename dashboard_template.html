@@ -112,11 +112,35 @@ ul.moves li{padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;lin
 .gridpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px;margin:6px 0 16px}
 .gridpick div{font-size:13px;padding:4px 0;border-bottom:1px solid var(--line)}.gridpick b{font-family:var(--mono);font-size:11px;color:var(--ink2);margin-right:6px}
 @media(max-width:560px){.prof{grid-template-columns:1fr 1fr}.prof .rv{grid-column:1/-1;text-align:left}.story li,.feed li{grid-template-columns:1fr}}
+
+/* data-desk restyle: sharp corners, rules instead of cards */
+.brand::before{display:none}.brand{letter-spacing:.01em;text-transform:none}
+.panel{background:transparent;border:0;border-top:3px solid var(--ink);border-radius:0;padding:16px 0 0}
+.kpi,.callout,.story,.chip,.badge,.tag,.tm,select,.stepper button,.subtabs button{border-radius:0}
+.kpi{background:transparent;border:0;border-top:1px solid var(--ink);padding:8px 0}
+.chip{border:0;border-bottom:2px solid transparent;background:none;padding:3px 2px;margin-right:10px;color:var(--ink2)}
+.chip[aria-pressed=true]{background:none;color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.kicker{font:600 11px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--bad);margin:0 0 12px;border-top:1px solid var(--ink);padding-top:8px}
+h1{font-weight:700;letter-spacing:-.025em}
+.callout{background:transparent;border:0;border-left:3px solid var(--accent)}
+.story{background:transparent;border-width:1px 0;border-left:0;border-color:var(--ink)}
+/* lab + new charts */
+.lab{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:28px}
+@media(max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}}
+.sl{margin:0 0 14px}.sl label{display:flex;justify-content:space-between;font:600 12px var(--body);margin-bottom:2px}.sl label span{font:500 12px var(--mono);color:var(--ink2)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.presets{display:flex;flex-wrap:wrap;gap:4px 0;margin-bottom:14px}
+.lr{display:grid;grid-template-columns:28px 44px 1fr 62px;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;transition:background .15s}
+.lr:hover{background:var(--accent-soft)}.lr b{font-family:var(--mono);font-size:12px;cursor:pointer}.lr .d{font:12px var(--mono);text-align:right}
+.lr .tr{height:9px;background:var(--line);position:relative}.lr .tr i{position:absolute;left:50%;top:0;height:9px}
+.sec{margin-top:34px}
+#bc .cell{cursor:pointer}#bc .cell:hover{stroke:var(--ink);stroke-width:1.5}
+#an .seg{cursor:pointer}
 </style></head><body>
 <div id="tip" role="tooltip"></div>
 <div class="top"><div class="wrap"><div class="brand">The Low Post</div><nav role="tablist" id="tabs"></nav></div></div>
 <div class="wrap">
-<header><h1>Low Post Franchise Index</h1>
+<header><div class="kicker" id="kick"></div><h1>Low Post Franchise Index</h1>
 <p class="sub">Every NBA franchise from 1991 to 2026, scored on what it built (draft, trades, free agency, contracts, fringe signings) and what it won. Weights are checked by a backtest that only uses information available at the time.</p></header>
 
 <section id="p-rank" hidden>
@@ -125,6 +149,11 @@ ul.moves li{padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;lin
    <div class="tw"><table id="rank"><thead></thead><tbody></tbody></table></div></div>
   <div class="panel"><h2>Built vs. won</h2><p class="note">Right of center: smart builders. Above center: winners. Larger dots have more titles. Hover for details, click a dot to open the team.</p><svg id="map" viewBox="0 0 440 440" role="img" aria-label="Scatter of built value against results for 30 franchises"></svg></div>
  </div>
+
+ <div class="sec panel"><h2>Every season, every team</h2><p class="note">One row per franchise, ranked by blend, one column per season. Green is a better-than-average team, red is worse, gold is a title. Click any cell to open that season.</p><svg id="bc" role="img" aria-label="Heat map of every franchise season since 1991"></svg>
+  <div class="legend"><span><i style="background:var(--accent)"></i>Above average</span><span><i style="background:var(--bad)"></i>Below average</span><span><i style="background:var(--warn)"></i>Champion</span></div></div>
+ <div class="sec panel"><h2>Anatomy of a champion</h2><p class="note">Every title team since 1991, split by how its wins were acquired: drafted, traded for, signed in free agency, or other routes. Based on each roster's top contributors. Click a bar to open the season.</p><div id="anSum" class="callout"></div><svg id="an" role="img" aria-label="Stacked bars of how each champion's wins were acquired"></svg>
+  <div class="legend" id="anLeg"></div></div>
 </section>
 
 <section id="p-team" hidden>
@@ -144,6 +173,10 @@ ul.moves li{padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;lin
  <div class="row"><select id="offTeam" aria-label="Team"></select></div>
  <div class="chips" id="offChips"></div>
  <div id="offBody"></div></div></section>
+
+<section id="p-lab" hidden><div class="panel"><h2>Rebuild the ranking</h2>
+ <p class="note">Disagree with the weights? Decide what matters. Move the sliders and the whole league re-ranks live. Narrow the window to compare eras. Arrows show movement against the default ranking.</p>
+ <div class="lab"><div id="sliders"></div><div id="labOut"></div></div></div></section>
 
 <section id="p-gm" hidden><div class="panel"><h2>General managers and presidents</h2>
  <p class="note">Everyone with at least three seasons in charge. Results and built value are averages in standard deviations. Across 22 executives who ran two different teams, built value did not carry over (rank correlation about -0.4), so treat these as descriptions of a tenure, not forecasts of a person.</p>
@@ -176,7 +209,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const season=y=>(y-1)+'–'+String(y).slice(2);
 const poLabel=(p,c)=>c?'Champions':p>=5?'Champions':p>=4?'Lost in the Finals':p>=3?'Lost conference finals':p>=2?'Lost second round':p>=1?'Lost first round':p>=.5?'Play-in only':'Missed playoffs';
 const X=D.x||{players:{},needs:{},metrics:[],off:{moves:[],picks:[],label:'Offseason'},stories:[]};
-const tabs=[['rank','Rankings'],['team','Team detail'],['off',X.off.label.charAt(0).toUpperCase()+X.off.label.slice(1)],['gm','Executives'],['bt','Backtest'],['how','Method']];
+const tabs=[['rank','Rankings'],['team','Team detail'],['lab','Rebuild it'],['off',X.off.label.charAt(0).toUpperCase()+X.off.label.slice(1)],['gm','Executives'],['bt','Backtest'],['how','Method']];
 const nav=$('#tabs');
 function show(id){tabs.forEach(([k])=>{$('#p-'+k).hidden=k!==id});[...nav.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.k===id));try{history.replaceState(null,'','#'+id)}catch(e){}}
 tabs.forEach(([k,l])=>{const b=el('button',l);b.dataset.k=k;b.setAttribute('role','tab');b.onclick=()=>show(k);nav.appendChild(b)});
@@ -325,6 +358,50 @@ function drawOff(){
  $('#offBody').querySelectorAll('.tm').forEach(b=>b.onclick=()=>{offTeam=b.dataset.t;offKind='All';drawOff();scrollTo({top:0})})}
 $('#toOff').onclick=()=>{offTeam=curTeam;offKind='All';drawOff();show('off');scrollTo({top:0})};
 drawRank();drawMap();drawTeam();drawGM();drawOff();
+// ---- data-desk extras ----
+$('#kick').textContent='Franchise data desk \u00b7 30 teams \u00b7 1991\u20132026 \u00b7 updated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+const zcol=v=>{const t=Math.max(-1,Math.min(1,v/1.6));return t>=0?`rgba(13,107,69,${.12+.88*t})`:`rgba(180,65,47,${.12+.88*-t})`};
+function drawBarcode(){
+ const order=[...D.fs].sort((a,b)=>a.rank-b.rank).map(r=>r.tm),yrs=[...new Set(D.z.map(z=>z.year))].sort((a,b)=>a-b);
+ const L=40,W=900,cw=(W-L)/yrs.length,ch=15,H=order.length*ch+22,idx={};D.z.forEach(z=>idx[z.tm+'|'+z.year]=z);
+ let h='';order.forEach((t,i)=>{h+=`<text x="${L-6}" y="${i*ch+11}" text-anchor="end" style="font-size:10px">${t}</text>`;
+  yrs.forEach((y,j)=>{const z=idx[t+'|'+y];if(!z)return;h+=`<rect class="cell" data-t="${t}" data-y="${y}" x="${L+j*cw+.5}" y="${i*ch+1}" width="${cw-1}" height="${ch-2}" fill="${z.champ?'#c9962b':zcol(z.results_z)}"/>`})});
+ yrs.forEach((y,j)=>{if(y%5===0)h+=`<text x="${L+j*cw+cw/2}" y="${H-6}" text-anchor="middle" style="font-size:10px">${y}</text>`});
+ const s=$('#bc');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=h;
+ s.onmousemove=e=>{const c=e.target.closest('.cell');if(!c){tipHide();return}const z=idx[c.dataset.t+'|'+c.dataset.y];tipShow(`<b>${c.dataset.t} ${season(z.year)}</b>${z.wins}\u2013${z.losses} \u00b7 SRS ${f(z.srs,1)}<br>${poLabel(z.playoff_pts,z.champ)}`,e)};
+ s.onmouseleave=tipHide;s.onclick=e=>{const c=e.target.closest('.cell');if(c)openTeam(c.dataset.t,+c.dataset.y)}}
+const HOW=[['Rookie','Rookie (draft)','#c9962b'],['Trade','Traded for','#b4412f'],['Free agent','Free agency','#0d6b45'],['','Other or pre-1991 arrival','#8a8f86']];
+function drawAnatomy(){
+ const ch=D.z.filter(z=>z.champ&&(X.players||{})[z.tm+'|'+z.year]).sort((a,b)=>a.year-b.year);
+ const rows=ch.map(z=>{const sh=[0,0,0,0];(X.players[z.tm+'|'+z.year]||[]).slice(0,13).forEach(r=>{const w=Math.max(0,r[5]||0);let y=z.year,hw=r[7];while(true){const q=(X.players[z.tm+'|'+(y-1)]||[]).find(a=>a[0]===r[0]);if(!q)break;y--;hw=q[7]}const k=hw==='Rookie'?0:hw==='Trade'?1:hw==='Free agent'?2:3;sh[k]+=w});const T=sh.reduce((a,b)=>a+b,0)||1;return{z,sh,p:sh.map(v=>v/T)}});
+ const avg=[0,1,2,3].map(k=>rows.reduce((a,r)=>a+r.p[k],0)/rows.length);
+ $('#anSum').innerHTML=`Across ${rows.length} champions, <b>${Math.round(avg[0]*100)}%</b> of wins came from drafted players, <b>${Math.round(avg[1]*100)}%</b> from trades, <b>${Math.round(avg[2]*100)}%</b> from free agency and <b>${Math.round(avg[3]*100)}%</b> from other routes (waivers, undrafted or pre-1991 arrivals).`;
+ const L=86,W=900,rh=17,H=rows.length*rh+8;let h='';
+ rows.forEach((r,i)=>{h+=`<text x="${L-8}" y="${i*rh+12}" text-anchor="end" style="font-size:10.5px">${season(r.z.year)} ${r.z.tm}</text>`;let x=L;r.p.forEach((p,k)=>{const w=p*(W-L-4);if(w>0){h+=`<rect class="seg" data-i="${i}" data-k="${k}" x="${x}" y="${i*rh+2}" width="${w}" height="${rh-4}" fill="${HOW[k][2]}"/>`;x+=w}})});
+ const s=$('#an');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=h;
+ s.onmousemove=e=>{const c=e.target.closest('.seg');if(!c){tipHide();return}const r=rows[+c.dataset.i],k=+c.dataset.k;tipShow(`<b>${season(r.z.year)} ${r.z.tm}</b>${HOW[k][1]}: ${Math.round(r.p[k]*100)}% (${r.sh[k].toFixed(1)} wins added)`,e)};
+ s.onmouseleave=tipHide;s.onclick=e=>{const c=e.target.closest('.seg');if(c){const r=rows[+c.dataset.i];openTeam(r.z.tm,r.z.year)}};
+ $('#anLeg').innerHTML=HOW.map(x=>`<span><i style="background:${x[2]}"></i>${x[1]}</span>`).join('')}
+// lab: user-weighted ranking
+const LW=[['results_z','Results (record and playoffs)',50],['z_draft_z','Drafting',10],['z_trade_net','Trades',10],['z_fa_surplus','Free agency',10],['z_contract_other','Contracts',10],['z_pipeline_wa','Fringe signings and development',10]];
+const YR=[Math.min(...D.z.map(z=>z.year)),Math.max(...D.z.map(z=>z.year))];
+let lw=LW.map(x=>x[2]),ly=[...YR];
+function labScore(w,y0,y1){const out={};D.z.forEach(z=>{if(z.year<y0||z.year>y1)return;const o=out[z.tm]||(out[z.tm]={s:0,n:0});let a=0;LW.forEach((c,i)=>{a+=w[i]*(z[c[0]]||0)});o.s+=a;o.n++});const S=w.reduce((a,b)=>a+b,0)||1;return Object.entries(out).map(([tm,o])=>({tm,v:o.s/o.n/S*100})).sort((a,b)=>b.v-a.v)}
+const labBase=(()=>{const m={};labScore(LW.map(x=>x[2]),YR[0],YR[1]).forEach((r,i)=>m[r.tm]=i+1);return m})();
+const PRE={'Default':[50,10,10,10,10,10],'Only winning':[100,0,0,0,0,0],'Only building':[0,25,25,25,25,25],'Draft believer':[20,60,10,10,0,0],'Trade shark':[20,10,60,10,0,0],'Free-agency era':[20,0,0,70,10,0]};
+function drawLab(){
+ const sl=$('#sliders');if(!sl.children.length){
+  sl.innerHTML=LW.map((c,i)=>`<div class="sl"><label>${c[1]}<span id="lv${i}"></span></label><input type="range" min="0" max="100" step="5" data-i="${i}"></div>`).join('')+`<div class="sl"><label>From season<span id="ly0"></span></label><input type="range" id="y0" min="${YR[0]}" max="${YR[1]}" step="1"></div><div class="sl"><label>To season<span id="ly1"></span></label><input type="range" id="y1" min="${YR[0]}" max="${YR[1]}" step="1"></div><div class="presets">${Object.keys(PRE).map(k=>`<button class="chip" data-p="${k}">${k}</button>`).join('')}</div>`;
+  sl.querySelectorAll('input[data-i]').forEach(r=>r.oninput=()=>{lw[+r.dataset.i]=+r.value;drawLab()});
+  $('#y0').oninput=e=>{ly[0]=Math.min(+e.target.value,ly[1]);drawLab()};$('#y1').oninput=e=>{ly[1]=Math.max(+e.target.value,ly[0]);drawLab()};
+  sl.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{lw=[...PRE[b.dataset.p]];drawLab()})}
+ sl.querySelectorAll('input[data-i]').forEach(r=>{r.value=lw[+r.dataset.i];$('#lv'+r.dataset.i).textContent=lw[+r.dataset.i]+'%'});
+ $('#y0').value=ly[0];$('#y1').value=ly[1];$('#ly0').textContent=season(ly[0]);$('#ly1').textContent=season(ly[1]);
+ const R=labScore(lw,ly[0],ly[1]),mx=Math.max(.01,...R.map(r=>Math.abs(r.v)));
+ $('#labOut').innerHTML=R.map((r,i)=>{const d=labBase[r.tm]-(i+1);return `<div class="lr"><span class="n" style="font:12px var(--mono)">${i+1}</span><b data-t="${r.tm}">${r.tm}</b><div class="tr"><i style="${r.v>=0?'left:50%':'right:50%'};width:${Math.abs(r.v)/mx*50}%;background:var(--${r.v>=0?'good':'bad'})"></i></div><span class="d ${d>0?'pos':d<0?'neg':''}">${d>0?'\u25b2'+d:d<0?'\u25bc'+(-d):'\u2013'}</span></div>`}).join('');
+ $('#labOut').querySelectorAll('b[data-t]').forEach(b=>b.onclick=()=>openTeam(b.dataset.t))}
+drawBarcode();drawAnatomy();drawLab();
+
 const h0=(location.hash||'').replace('#','');show(tabs.some(t=>t[0]===h0)?h0:'rank');
 </script>
 </body></html>
