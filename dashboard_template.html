@@ -168,6 +168,7 @@ nav>button[aria-selected=true],.dd>button[aria-selected=true]{color:var(--accent
 .gc h3{font:700 18px var(--disp);margin:0}.gc .m{font-size:12px;color:var(--ink2);margin:2px 0 8px}.gc .sk{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.gc .sk div{font:600 10px var(--body);color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}.gc .sk .dv{margin:3px 0 1px}.gc .sk em{font:normal 11px var(--mono);color:var(--ink)}
 .gc p{font-size:12.5px;margin:8px 0 0;color:var(--ink)}
 .tagp{font:700 10px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--bad);margin-left:8px}
+.pill.Inthemix{background:#5d685f}.gc .sk.three{grid-template-columns:repeat(3,1fr)}.gc .sub2{font-size:11px;color:var(--ink2)}
 </style></head><body>
 <div id="tip" role="tooltip"></div>
 <div class="top"><div class="wrap"><div class="brand">The Low Post</div><nav id="tabs"></nav></div></div>
@@ -214,8 +215,8 @@ nav>button[aria-selected=true],.dd>button[aria-selected=true]{color:var(--accent
  <p class="note">Decide what matters. The league re-ranks as you move the sliders. Arrows show movement from the default.</p>
  <div class="lab"><div id="sliders"></div><div id="labOut"></div></div></div></section>
 
-<section id="p-gm" hidden><div class="panel"><h2>GM report cards</h2><p class="note">Grades are relative: A is the top 15% of executives with three or more seasons, F is the bottom 15%. Skills are in standard deviations against the league.</p>
- <div class="row"><select id="gmSort" aria-label="Sort"><option value="blend">Best overall</option><option value="results">Best results</option><option value="draft">Best drafters</option><option value="trades">Best traders</option><option value="fa">Best in free agency</option><option value="contracts">Best with contracts</option></select><span class="chips" id="gmChips" style="margin:0"></span></div>
+<section id="p-gm" hidden><div class="panel"><h2>Front office report cards</h2><p class="note">Each front office is graded on three things: its track record in the job (recent seasons count most), the roster it has built (the next four seasons of its eight best players), and what it did this offseason (trades, signings, the draft). A is the top 15% of the league, F the bottom 15%.</p>
+ <div class="row"><select id="gmSort" aria-label="Sort"><option value="score">Overall</option><option value="off">Offseason</option><option value="assets">Roster</option><option value="ten">Track record</option></select><span class="chips" id="gmChips" style="margin:0"></span></div>
  <div class="cards" id="gmCards"></div></div></section>
 
 <section id="p-bt" hidden><div class="panel"><h2>Backtest</h2>
@@ -232,6 +233,8 @@ nav>button[aria-selected=true],.dd>button[aria-selected=true]{color:var(--accent
  <li><b>Free agency and fringe signings.</b> First-season surplus of free agents, and production from two-way, Exhibit 10 and 10-day signees credited to the team that signed them first.</li>
  <li><b>Results.</b> Point differential and playoff rounds, with half a point for the play-in since 2021.</li>
  <li><b>Season view.</b> Rosters show the 13 players with the most minutes. Salary is shown where the salary file has it. The moves list covers trades, signings, draft picks and coaching or front-office changes from Basketball Reference, not 10-day or two-way deals.</li>
+ <li><b>Window clock.</b> The current roster is last season plus every offseason trade, signing and draft pick. Players are valued on their last three seasons (minutes-weighted, so an injury year does not erase a star), aged forward with the real year-to-year change by age.</li>
+ <li><b>Front offices.</b> Track record (30%) is results and built value under the current executive, weighted toward recent years. Roster (30%) is the projected value of the eight best players over four seasons. Offseason (40%) is the three-year value of players and picks added minus those sent away. New regimes have no track record yet.</li>
  <li><b>Known gaps.</b> Salary data stops after 2024, so 2025 and 2026 contract scores are neutral. Penalty years for two 76ers picks are as reported. The Clippers' five forfeited firsts are in 2029&ndash;33 and not yet scored.</li></ol></div></section>
 <footer>Data: Basketball Reference. Updated automatically each day.</footer>
 </div>
@@ -245,7 +248,7 @@ const season=y=>(y-1)+'–'+String(y).slice(2);
 const poLabel=(p,c)=>c?'Champions':p>=5?'Champions':p>=4?'Lost in the Finals':p>=3?'Lost conference finals':p>=2?'Lost second round':p>=1?'Lost first round':p>=.5?'Play-in only':'Missed playoffs';
 const X=D.x||{players:{},needs:{},metrics:[],off:{moves:[],picks:[],label:'Offseason'},stories:[]};
 const OFFL=X.off.label.charAt(0).toUpperCase()+X.off.label.slice(1);
-const MENU=[['Home','rank'],['Teams',[['report','Team report'],['team','Season by season'],['window','Window clock']]],['League',[['off',OFFL],['gm','GM report cards'],['lab','Rebuild the ranking']]],['About',[['how','How it works'],['bt','Backtest']]]];
+const MENU=[['Home','rank'],['Teams',[['report','Team report'],['team','Season by season'],['window','Window clock']]],['League',[['off',OFFL],['gm','Front office report cards'],['lab','Rebuild the ranking']]],['About',[['how','How it works'],['bt','Backtest']]]];
 const tabs=[];MENU.forEach(m=>{if(typeof m[1]==='string')tabs.push([m[1],m[0]]);else m[1].forEach(t=>tabs.push(t))});
 const nav=$('#tabs');
 function show(id){tabs.forEach(([k])=>{$('#p-'+k).hidden=k!==id});$('header').hidden=id!=='rank';
@@ -443,70 +446,74 @@ function drawLab(){
  $('#labOut').innerHTML=R.map((r,i)=>{const d=labBase[r.tm]-(i+1);return `<div class="lr"><span class="n" style="font:12px var(--mono)">${i+1}</span><b data-t="${r.tm}">${r.tm}</b><div class="tr"><i style="${r.v>=0?'left:50%':'right:50%'};width:${Math.abs(r.v)/mx*50}%;background:var(--${r.v>=0?'good':'bad'})"></i></div><span class="d ${d>0?'pos':d<0?'neg':''}">${d>0?'\u25b2'+d:d<0?'\u25bc'+(-d):'\u2013'}</span></div>`}).join('');
  $('#labOut').querySelectorAll('b[data-t]').forEach(b=>b.onclick=()=>openTeam(b.dataset.t))}
 
-// ---- v6: report, window clock, GM cards, front page ----
-const LASTY=Math.max(...D.z.map(z=>z.year)),CURVE=X.curve||{};
-const dAge=a=>{a=Math.max(19,Math.min(38,Math.round(a)));return CURVE[a]!=null?CURVE[a]:(a>=30?-.8:.3)};
-const coreOf=tm=>((X.players||{})[tm+'|'+LASTY]||[]).filter(p=>p[5]!=null).sort((a,b)=>b[5]-a[5]).slice(0,8);
-function project(c,n=6){const q=c.map(p=>({age:p[1]==null?26:p[1],w:Math.max(0,p[5])}));const out=[q.reduce((a,p)=>a+p.w,0)];for(let t=1;t<=n;t++){q.forEach(p=>{p.w=Math.max(0,p.w+dAge(p.age+t-1))});out.push(q.reduce((a,p)=>a+p.w,0))}return out}
-const WIN={};D.fs.forEach(r=>{const c=coreOf(r.tm);if(!c.length)return;WIN[r.tm]={c,p:project(c),age:c.reduce((a,x)=>a+(x[1]||26),0)/c.length}});
-const v0s=Object.values(WIN).map(w=>w.p[0]).sort((a,b)=>a-b),TOP=v0s[Math.floor(v0s.length*.67)],VMAX=Math.max(...Object.values(WIN).map(w=>Math.max(...w.p)));
-Object.values(WIN).forEach(w=>{const p=w.p;w.label=p[0]>=TOP?(p[3]<=.8*p[0]?'Closing':'Contending'):(p[3]>=1.1*p[0]?'Rising':'Rebuilding');
- if(p[0]>=TOP){let t=0;while(t<6&&p[t+1]>=TOP)t++;w.txt=t>=6?`In the window through ${LASTY+6}+`:`In the window through ${LASTY+t}`}
- else{const t=p.findIndex(v=>v>=TOP);w.txt=t>0?`Window opens ${LASTY+t}`:'No window on the current core'}});
+// ---- v7: report, window clock, front office cards, front page ----
+const LASTY=Math.max(...D.z.map(z=>z.year)),W=X.win||{},FO=X.fo||{};
 const fy=y=>(y-1)+'–'+String(y).slice(2);
-function spark(w,h=38,W=190){const n=w.p.length,bw=W/n;let o=`<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="none">`;const yy=v=>h-2-(v/VMAX)*(h-6);
- w.p.forEach((v,i)=>{o+=`<rect x="${i*bw+2}" y="${yy(v)}" width="${bw-4}" height="${h-2-yy(v)}" fill="${v>=TOP?'var(--accent)':'#b9b3a0'}"/>`});
- return o+`<line x1="0" x2="${W}" y1="${yy(TOP)}" y2="${yy(TOP)}" stroke="var(--ink)" stroke-dasharray="3 3"/></svg>`}
+const tms=Object.keys(W),mean=a=>a.reduce((x,y)=>x+y,0)/(a.length||1),sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))||1};
+const p0s=tms.map(t=>W[t].p[0]),mp0=mean(p0s),sp0=sd(p0s),rz={};
+tms.forEach(t=>{const r=D.z.filter(z=>z.tm===t&&z.year>=LASTY-1);rz[t]=r.length?mean(r.map(z=>z.results_z)):0});
+const mrz=mean(Object.values(rz)),srz=sd(Object.values(rz)),LV=[...p0s].sort((a,b)=>a-b)[Math.floor(p0s.length*.6)]*.92,VMAX=Math.max(...tms.map(t=>Math.max(...W[t].p)));
+tms.forEach(t=>{const w=W[t],p=w.p;w.now=.5*(p[0]-mp0)/sp0+.5*(rz[t]-mrz)/srz;
+ const hi=w.now>=.45,lo=w.now<=-.45,up=p[3]>=1.1*p[0],dn=p[3]<=.7*p[0];
+ w.label=hi?(dn?'Closing':'Contending'):lo?(up?'Rising':'Rebuilding'):(up?'Rising':dn?'Closing':'In the mix');w.cls=w.label.replace(/ /g,'');
+ if(hi||p[0]>=LV){const L2=hi?LV*.85:LV;let k=0;while(k<6&&p[k+1]>=L2)k++;w.txt=k>=6?`In the window through ${fy(LASTY+7)} and beyond`:`In the window through ${fy(LASTY+1+k)}`}
+ else{const k=p.findIndex(v=>v>=LV);w.txt=k>0?`Window opens ${fy(LASTY+1+k)}`:'No window on the current core'}
+ w.age=mean(w.core.map(c=>c[1]))});
+function spark(w,h=38,Wd=190){const n=w.p.length,bw=Wd/n;let o=`<svg viewBox="0 0 ${Wd} ${h}" preserveAspectRatio="none">`;const yy=v=>h-2-(v/VMAX)*(h-6);
+ w.p.forEach((v,i)=>{o+=`<rect x="${i*bw+2}" y="${yy(v)}" width="${bw-4}" height="${h-2-yy(v)}" fill="${v>=LV?'var(--accent)':'#b9b3a0'}"/>`});
+ return o+`<line x1="0" x2="${Wd}" y1="${yy(LV)}" y2="${yy(LV)}" stroke="var(--ink)" stroke-dasharray="3 3"/></svg>`}
 function openReport(t){repTeam=t;$('#repSel').value=t;drawReport();show('report');scrollTo({top:0})}
 let repTeam='SAS';
 const sel0=$('#repSel');teams.forEach(t=>{const o=el('option',t);o.value=t;sel0.appendChild(o)});sel0.value=repTeam;sel0.onchange=()=>{repTeam=sel0.value;drawReport()};
 $('#repSeason').onclick=()=>openTeam(repTeam,LASTY);$('#repOff').onclick=()=>{offTeam=repTeam;offKind='All';drawOff();show('off');scrollTo({top:0})};
-// grades
-const GBL=D.gm.map(g=>g.blend).sort((a,b)=>a-b),gpct=v=>GBL.filter(x=>x<=v).length/GBL.length;
-const grade=v=>{const p=gpct(v);return p>=.85?'A':p>=.6?'B':p>=.35?'C':p>=.15?'D':'F'};
-const SK=[['results','Results'],['draft','Draft'],['trades','Trades'],['fa','Free agency'],['contracts','Contracts']];
+// front-office grades
+const FOL=Object.entries(FO).map(([t,f])=>({t,...f})),pr=(arr,v)=>arr.filter(x=>x<=v).length/arr.length;
+const letter=p=>p>=.85?'A':p>=.6?'B':p>=.35?'C':p>=.15?'D':'F';
+const offG={};FOL.forEach(f=>offG[f.t]=letter(pr(FOL.map(x=>x.off),f.off)));
 function mbar(v,mx){const w=Math.min(Math.abs(v)/mx,1)*50;return `<div class="dv"><i class="${v>=0?'p':'n'}" style="width:${w}%"></i></div>`}
+const nl=a=>a.map(x=>esc(x[0].replace(/ \(#\d+ pick\)/,''))+' ('+x[1].toFixed(1)+')').join(', ');
 function drawReport(){
- const tm=repTeam,key=tm+'|'+LASTY,n=(X.needs||{})[key],z=D.z.find(q=>q.tm===tm&&q.year===LASTY),fr=D.fs.find(r=>r.tm===tm),w=WIN[tm];
- if(!n||!z){$('#repBody').innerHTML='<p class="note">No current-season data.</p>';return}
+ const tm=repTeam,key=tm+'|'+LASTY,n=(X.needs||{})[key],z=D.z.find(q=>q.tm===tm&&q.year===LASTY),w=W[tm],fo=FO[tm];
+ if(!n||!z||!w){$('#repBody').innerHTML='<p class="note">No current-season data.</p>';return}
  const items=X.metrics.map((m,i)=>({m,label:m[1],z:n.z[i],r:n.r[i],v:n.v[i]})).filter(o=>o.z!=null).sort((a,b)=>a.z-b.z);
  const weak=items.filter(o=>o.z<-.2).slice(0,3),strong=items.filter(o=>o.z>.2).reverse().slice(0,3);
  const res=poLabel(z.playoff_pts,z.champ).toLowerCase();
  const head=z.champ?`${tm} won it all, and ${strong.length?strong[0].label.toLowerCase()+' was the edge':'there was no single edge'}.`:weak.length?`${tm}'s problem: ${weak[0].label.toLowerCase()}.`:`${tm} had no glaring hole.`;
- const gm=D.gm.find(g=>g.tm===tm&&g.last>=LASTY);
- const deck=`${fy(LASTY)}: ${z.wins}–${z.losses}, ${res}${n.by?' ('+n.by+')':''}. `+(weak.length?`Ranked #${weak[0].r} of 30 in ${weak[0].label.toLowerCase()}.`:'')+(w?` Window: ${w.txt.toLowerCase()}.`:'');
+ const deck=`${fy(LASTY)}: ${z.wins}–${z.losses}, ${res}${n.by?' ('+n.by+')':''}. `+(weak.length?`Ranked #${weak[0].r} of 30 in ${weak[0].label.toLowerCase()}. `:'')+`Now: ${w.label.toLowerCase()}. ${w.txt}.`;
  const mr=o=>`<div class="mr"><span>${o.label}</span><span class="rv">#${o.r} · ${fmtv(o.m,o.v)}</span>${mbar(o.z,2.5)}</div>`;
- const core=w?w.c.slice(0,6).map(p=>{const d=dAge((p[1]==null?26:p[1]));return `<div class="pl"><b>${esc(p[0])}</b><span>${p[1]||''}</span><span>${f(p[5],1)}</span><span class="${cls(d)}">${f(d,1)} next</span></div>`}).join(''):'';
- const O=X.off,mv=O.moves.filter(m=>m.t.includes(tm)),pk=O.picks.filter(p=>p.t===tm),tr=mv.filter(m=>m.k==='Trade').slice(0,3);
- const st=(X.stories||[]).filter(q=>q.team===tm);
- const off=`<div class="mr" style="grid-template-columns:1fr"><span>${pk.length} draft pick${pk.length==1?'':'s'}${pk.length?': '+pk.slice(0,3).map(p=>'#'+p.n+' '+esc(p.p)).join(', '):''}</span></div><div class="mr" style="grid-template-columns:1fr"><span>${mv.filter(m=>m.k==='Trade').length} trades, ${mv.filter(m=>m.k==='Signing'||m.k==='Extension').length} signings and extensions, ${mv.filter(m=>m.k==='Staff').length} staff moves</span></div>`+tr.map(m=>`<div class="mr" style="grid-template-columns:1fr;color:var(--ink2)"><span>${fmtD(m.d,m.dl)}: ${esc(m.x.length>150?m.x.slice(0,150)+'…':m.x)}</span></div>`).join('')+st.map(q=>`<div class="callout bad" style="margin-top:8px"><b>${esc(q.title)}</b></div>`).join('');
+ const core=w.core.slice(0,6).map(p=>`<div class="pl"><b>${esc(p[0])}${p[4]?' <span class="pill" style="background:var(--accent)">New</span>':''}</b><span>${p[1]}</span><span>${f(p[2],1)}</span><span class="${cls(p[3])}">${f(p[3],1)}</span></div>`).join('');
+ const O=X.off,mv=O.moves.filter(m=>m.t.includes(tm)),st=(X.stories||[]).filter(q=>q.team===tm),pk=w.picks;
+ const off=`<div class="mr" style="grid-template-columns:1fr"><span><b>Added:</b> ${w.adds.length?nl(w.adds):'no rotation players'}</span></div><div class="mr" style="grid-template-columns:1fr"><span><b>Lost:</b> ${w.lost.length?nl(w.lost):'nobody notable'}</span></div><div class="mr" style="grid-template-columns:1fr"><span><b>Picks:</b> ${pk[0]} first${pk[0]==1?'':'s'} in, ${pk[1]} out; ${pk[2]} second${pk[2]==1?'':'s'} in, ${pk[3]} out. ${mv.length} transactions in all.</span></div>`+st.map(q=>`<div class="callout bad" style="margin-top:8px"><b>${esc(q.title)}</b></div>`).join('');
  $('#repBody').innerHTML=`<h2>${esc(head)}</h2><p class="deck">${deck}</p>
- <div class="rgrid"><div><h3>What is broken</h3>${weak.length?weak.map(mr).join(''):'<p class="note">Nothing below league average by a clear margin.</p>'}<h3 style="margin-top:20px">What works</h3>${strong.map(mr).join('')}</div>
- <div><h3>The core and where it is headed</h3>${w?`<div class="pl" style="color:var(--ink2);font:600 10px var(--body);text-transform:uppercase"><span style="text-align:left;font:inherit">Player</span><span style="font:inherit">Age</span><span style="font:inherit">WA</span><span style="font:inherit">Trend</span></div>${core}<h3 style="margin-top:20px">Window clock <span class="pill ${w.label}">${w.label}</span></h3><p class="note" style="margin:0 0 6px">${w.txt}.</p>${spark(w,60,300)}<div class="hint">${fy(LASTY)} to ${fy(LASTY+6)}. Dashed line is contender level.</div>`:''}</div>
- <div><h3>${OFFL}</h3>${off}<h3 style="margin-top:20px">Front office</h3><p class="note" style="margin:0">${gm?`<b>${esc(gm.exec)}</b>, grade ${grade(gm.blend)} (${gm.seasons} seasons). Strongest at ${SK.slice().sort((a,b)=>gm[b[0]]-gm[a[0]])[0][1].toLowerCase()}, weakest at ${SK.slice().sort((a,b)=>gm[a[0]]-gm[b[0]])[0][1].toLowerCase()}.`:(z.exec_build?esc(z.exec_build)+' built this roster.':'No executive with three or more seasons on record.')}</p></div></div>
- <p class="hint" style="margin-top:20px">Standing and profile are from ${fy(LASTY)}, ranked against all 30 teams. Bars are standard deviations from league average.</p>`}
+ <div class="rgrid"><div><h3>What was broken in ${fy(LASTY)}</h3>${weak.length?weak.map(mr).join(''):'<p class="note">Nothing below league average by a clear margin.</p>'}<h3 style="margin-top:20px">What worked</h3>${strong.map(mr).join('')}</div>
+ <div><h3>Roster going into ${fy(LASTY+1)}</h3><div class="pl" style="color:var(--ink2);font:600 10px var(--body);text-transform:uppercase"><span style="text-align:left;font:inherit">Player</span><span style="font:inherit">Age</span><span style="font:inherit">WA</span><span style="font:inherit">Trend</span></div>${core}<h3 style="margin-top:20px">Window clock <span class="pill ${w.cls}">${w.label}</span></h3><p class="note" style="margin:0 0 6px">${w.txt}.</p>${spark(w,60,300)}<div class="hint">${fy(LASTY+1)} to ${fy(LASTY+7)}, eight best players. Dashed line is contender level.</div></div>
+ <div><h3>${OFFL}</h3>${off}<h3 style="margin-top:20px">Front office</h3><p class="note" style="margin:0">${fo?`<b>${esc(fo.exec)}</b>${fo.new?' (new regime)':''}. Overall <b>${letter(pr(FOL.map(x=>x.score),fo.score))}</b>: roster ${letter(pr(FOL.map(x=>x.assets),fo.assets))}, offseason ${offG[tm]}${fo.ten==null?'':', track record '+f(fo.ten,2)}.`:'No data.'}</p></div></div>
+ <p class="hint" style="margin-top:20px">Last-season profile is ranked against all 30 teams. WA is projected wins added for ${fy(LASTY+1)}; Trend is the typical change at that age. Bars are standard deviations from league average.</p>`}
 function drawWindow(){
- $('#winNote').textContent=`Each team's eight best players by wins added in ${fy(LASTY)}, aged forward using how players actually changed from one season to the next. Dashed line marks contender level. It leaves out future draft picks, trades and signings, so read it as the clock on the current core.`;
- const ord={Contending:0,Rising:1,Closing:2,Rebuilding:3};
- const rows=Object.entries(WIN).sort((a,b)=>ord[a[1].label]-ord[b[1].label]||b[1].p[0]-a[1].p[0]);
- $('#winBody').innerHTML=rows.map(([t,w])=>`<div class="wrow" data-t="${t}"><b class="t">${t}</b><span><span class="pill ${w.label}">${w.label}</span></span>${spark(w)}<span>${w.txt}. Core age ${w.age.toFixed(1)}, ${w.p[0].toFixed(0)} wins added now, ${w.p[3].toFixed(0)} in three years.</span></div>`).join('');
+ $('#winNote').textContent=`Each team's eight best players going into ${fy(LASTY+1)}, after the offseason's trades, signings and draft. Values come from the last three seasons and age forward on the league's real aging curve. Dashed line marks contender level. Future picks, trades and signings are not included, and neither are contracts (salary data ends in 2024).`;
+ const ord={Contending:0,Closing:1,Rising:2,'In the mix':3,Rebuilding:4};
+ const rows=tms.map(t=>[t,W[t]]).sort((a,b)=>ord[a[1].label]-ord[b[1].label]||b[1].now-a[1].now);
+ $('#winBody').innerHTML=rows.map(([t,w])=>`<div class="wrow" data-t="${t}"><b class="t">${t}</b><span><span class="pill ${w.cls}">${w.label}</span></span>${spark(w)}<span>${w.txt}. Core age ${w.age.toFixed(1)}; ${w.p[0].toFixed(0)} projected wins added now, ${w.p[3].toFixed(0)} in four years.</span></div>`).join('');
  $('#winBody').querySelectorAll('.wrow').forEach(r=>r.onclick=()=>openReport(r.dataset.t))}
-let gmFilter='All';
+let gmFilter='Current';
 function drawGM(){
- const k=$('#gmSort').value,cur=g=>g.last>=LASTY,gd=g=>grade(g.blend);
- const chips=[['All',D.gm.length],['Current',D.gm.filter(cur).length],['Hot seat',D.gm.filter(g=>cur(g)&&'DF'.includes(gd(g))).length],['A grades',D.gm.filter(g=>gd(g)==='A').length]];
- $('#gmChips').innerHTML=chips.map(([c,n])=>`<button class="chip" aria-pressed="${gmFilter===c}" data-c="${c}">${c} (${n})</button>`).join('');
+ const k=$('#gmSort').value;
+ $('#gmChips').innerHTML=['Current','All-time'].map(c=>`<button class="chip" aria-pressed="${gmFilter===c}" data-c="${c}">${c==='Current'?'Current front offices (30)':'All-time executives ('+D.gm.length+')'}</button>`).join('');
  $('#gmChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{gmFilter=b.dataset.c;drawGM()});
- const L=D.gm.filter(g=>gmFilter==='All'||(gmFilter==='Current'&&cur(g))||(gmFilter==='Hot seat'&&cur(g)&&'DF'.includes(gd(g)))||(gmFilter==='A grades'&&gd(g)==='A')).sort((a,b)=>b[k]-a[k]);
- $('#gmCards').innerHTML=L.map(g=>{const sk=SK.map(([c,l])=>[l,g[c]]),best=[...sk].sort((a,b)=>b[1]-a[1])[0],worst=[...sk].sort((a,b)=>a[1]-b[1])[0];
-  return `<div class="gc" data-t="${g.tm}"><div class="gl ${gd(g)}">${gd(g)}</div><div><h3>${esc(g.exec)}${cur(g)?(('DF'.includes(gd(g)))?'<span class="tagp">Hot seat</span>':'<span class="tagp" style="color:var(--accent)">Current</span>'):''}</h3><div class="m">${g.tm} · ${g.first}–${g.last} · ${g.seasons} seasons · blend ${f(g.blend)}</div>
-  <div class="sk">${sk.map(([l,v])=>`<div>${l}${mbar(v,1.5)}<em>${f(v)}</em></div>`).join('')}</div>
-  <p>Best at ${best[0].toLowerCase()} (${f(best[1])}). Worst at ${worst[0].toLowerCase()} (${f(worst[1])}).</p></div></div>`}).join('');
+ if(gmFilter==='All-time'){
+  const gl=g=>letter(pr(D.gm.map(x=>x.blend),g.blend)),kk=k==='score'?'blend':'blend',SK=[['results','Results'],['draft','Draft'],['trades','Trades'],['fa','Free agency'],['contracts','Contracts']];
+  $('#gmCards').innerHTML=[...D.gm].sort((a,b)=>b.blend-a.blend).map(g=>{const sk=SK.map(([c,l])=>[l,g[c]]);return `<div class="gc" data-t="${g.tm}"><div class="gl ${gl(g)}">${gl(g)}</div><div><h3>${esc(g.exec)}</h3><div class="m">${g.tm} · ${g.first}–${g.last} · ${g.seasons} seasons · blend ${f(g.blend)}</div><div class="sk">${sk.map(([l,v])=>`<div>${l}${mbar(v,1.5)}<em>${f(v)}</em></div>`).join('')}</div></div></div>`}).join('');
+ }else{
+  const L=[...FOL].sort((a,b)=>(k==='ten'?(b.ten==null?-9:b.ten)-(a.ten==null?-9:a.ten):b[k]-a[k]));
+  $('#gmCards').innerHTML=L.map(g=>{const G=letter(pr(FOL.map(x=>x.score),g.score)),w=W[g.t];
+   return `<div class="gc" data-t="${g.t}"><div class="gl ${G}">${G}</div><div><h3>${esc(g.exec)}${g.new?'<span class="tagp">New regime</span>':''}</h3><div class="m">${g.t} · ${g.ten==null?'no track record yet':g.yrs+' season'+(g.yrs==1?'':'s')+' on record'} · offseason grade ${offG[g.t]}</div>
+   <div class="sk three"><div>Track record${mbar(g.ten==null?0:g.ten,1)}<em>${g.ten==null?'n/a':f(g.ten)}</em></div><div>Roster${mbar(g.assets,2)}<em>${letter(pr(FOL.map(x=>x.assets),g.assets))}</em></div><div>Offseason${mbar(g.off,2)}<em>${offG[g.t]}</em></div></div>
+   <p>${w.adds.length?'Added '+nl(w.adds.slice(0,3))+'. ':''}${w.lost.length?'Lost '+nl(w.lost.slice(0,2))+'.':''}${w.picks[0]+w.picks[1]?` Firsts: ${w.picks[0]} in, ${w.picks[1]} out.`:''}</p></div></div>`}).join('')}
  $('#gmCards').querySelectorAll('.gc').forEach(c=>c.onclick=()=>openReport(c.dataset.t))}
 $('#gmSort').onchange=drawGM;
 // front page strip
-(function(){const by=(k)=>[...D.fs].sort((a,b)=>b[k]-a[k])[0],bg=[...D.gm].sort((a,b)=>b.blend-a.blend)[0],ch=D.z.find(q=>q.champ&&q.year===LASTY),rise=Object.entries(WIN).sort((a,b)=>b[1].p[4]-a[1].p[4])[0];
- const L=[['Best overall',by('blend').tm,'blend '+f(by('blend').blend),()=>openReport(by('blend').tm)],['Best builder',by('built_score').tm,'built '+f(by('built_score').built_score),()=>openReport(by('built_score').tm)],['Most banners',by('titles').tm,by('titles').titles+' titles',()=>openReport(by('titles').tm)],['Top executive',bg.exec.split(' ').slice(-1)[0],bg.tm+', '+bg.seasons+' seasons',()=>show('gm')],['Defending champ',ch?ch.tm:'–',fy(LASTY),()=>ch&&openReport(ch.tm)],[`Best core by ${LASTY+4}`,rise[0],rise[1].label.toLowerCase(),()=>show('window')]];
+(function(){const by=(k)=>[...D.fs].sort((a,b)=>b[k]-a[k])[0],top=[...FOL].sort((a,b)=>b.score-a.score)[0],ch=D.z.find(q=>q.champ&&q.year===LASTY),bo=[...FOL].sort((a,b)=>b.off-a.off)[0],rise=[...tms].sort((a,b)=>W[b].p[4]-W[a].p[4])[0];
+ const L=[['Best overall',by('blend').tm,'blend '+f(by('blend').blend),()=>openReport(by('blend').tm)],['Best builder',by('built_score').tm,'built '+f(by('built_score').built_score),()=>openReport(by('built_score').tm)],['Most banners',by('titles').tm,by('titles').titles+' titles',()=>openReport(by('titles').tm)],['Top front office',top.t,top.exec,()=>show('gm')],['Best offseason',bo.t,bo.exec,()=>openReport(bo.t)],[`Best core by ${fy(LASTY+5)}`,rise,W[rise].label.toLowerCase(),()=>show('window')]];
  $('#leads').innerHTML=L.map((l,i)=>`<div data-i="${i}"><span>${l[0]}</span><b>${l[1]}</b><small>${l[2]}</small></div>`).join('');$('#leads').querySelectorAll('div').forEach(d=>d.onclick=L[+d.dataset.i][3])})();
 drawReport();drawWindow();drawGM();
 drawBarcode();drawAnatomy();drawLab();
