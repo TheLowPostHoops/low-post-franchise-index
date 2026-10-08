@@ -136,30 +136,66 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .sec{margin-top:34px}
 #bc .cell{cursor:pointer}#bc .cell:hover{stroke:var(--ink);stroke-width:1.5}
 #an .seg{cursor:pointer}
+
+/* v6: menus, report, window clock, GM cards */
+nav{gap:0}.dd{position:relative}
+nav>button,.dd>button{font:500 13px var(--body);color:var(--ink2);background:none;border:0;border-bottom:2px solid transparent;padding:17px 14px 15px;cursor:pointer;white-space:nowrap}
+.dd>button::after{content:" \25be";font-size:10px}
+nav>button[aria-selected=true],.dd>button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.menu{display:none;position:absolute;top:100%;left:0;min-width:210px;background:var(--surface);border:1px solid var(--ink);box-shadow:4px 4px 0 var(--ink);z-index:40}
+.dd:nth-last-child(-n+2) .menu{left:auto;right:0}
+.dd.open .menu,.dd:hover .menu{display:block}
+.menu button{display:block;width:100%;text-align:left;font:500 13px var(--body);color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:11px 14px;cursor:pointer;border-radius:0}
+.menu button:last-child{border-bottom:0}.menu button:hover{background:var(--accent-soft)}.menu button[aria-selected=true]{color:var(--accent);font-weight:700}
+.sub{font:italic 400 19px/1.35 var(--disp);color:var(--ink);margin:10px 0 0}
+.leads{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin-top:22px;border-top:3px solid var(--ink);border-bottom:1px solid var(--ink)}
+.leads>div{padding:10px 14px 10px 0;margin-right:14px;border-right:1px solid var(--line);cursor:pointer}.leads>div:last-child{border-right:0}
+.leads span{display:block;font:600 10px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}.leads b{display:block;font:700 24px/1.15 var(--disp)}.leads small{color:var(--ink2);font-size:12px}
+.leads>div:hover b{color:var(--accent)}
+.rep h2{font-size:30px;line-height:1.1;margin:6px 0 4px;max-width:30ch}.rep .deck{font:italic 17px/1.4 var(--disp);color:var(--ink2);margin:0 0 18px;max-width:60ch}
+.rgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px}@media(max-width:900px){.rgrid{grid-template-columns:minmax(0,1fr)}}
+.rgrid h3{font:700 11px var(--body);letter-spacing:.14em;text-transform:uppercase;border-top:1px solid var(--ink);padding-top:7px;margin:0 0 10px}
+.mr{display:grid;grid-template-columns:1fr 96px;gap:2px 10px;margin-bottom:11px;font-size:13px}.mr .rv{font:12px var(--mono);color:var(--ink2);text-align:right}.mr .dv{grid-column:1/-1}
+.pl{display:grid;grid-template-columns:1fr 30px 46px 52px;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}.pl span{font:12px var(--mono);text-align:right}.pl b{font-weight:600}
+.pill{display:inline-block;font:700 10px var(--body);letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;color:#fff;background:var(--ink)}
+.pill.Rising{background:var(--accent)}.pill.Contending{background:var(--warn);color:var(--ink)}.pill.Closing{background:var(--bad)}.pill.Rebuilding{background:#8a8a7a}
+.wrow{display:grid;grid-template-columns:44px 100px 190px 1fr;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}.wrow:hover{background:var(--accent-soft)}
+.wrow b.t{font-family:var(--mono)}.wrow svg{width:190px;height:38px}
+@media(max-width:700px){.wrow{grid-template-columns:44px 1fr;}.wrow svg{width:100%}}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 34px}@media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+.gc{display:grid;grid-template-columns:62px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--ink);cursor:pointer}.gc:hover{background:var(--accent-soft)}
+.gl{font:700 54px/1 var(--disp)}.gl.A,.gl.B{color:var(--good)}.gl.C{color:var(--ink2)}.gl.D,.gl.F{color:var(--bad)}
+.gc h3{font:700 18px var(--disp);margin:0}.gc .m{font-size:12px;color:var(--ink2);margin:2px 0 8px}.gc .sk{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.gc .sk div{font:600 10px var(--body);color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}.gc .sk .dv{margin:3px 0 1px}.gc .sk em{font:normal 11px var(--mono);color:var(--ink)}
+.gc p{font-size:12.5px;margin:8px 0 0;color:var(--ink)}
+.tagp{font:700 10px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--bad);margin-left:8px}
 </style></head><body>
 <div id="tip" role="tooltip"></div>
-<div class="top"><div class="wrap"><div class="brand">The Low Post</div><nav role="tablist" id="tabs"></nav></div></div>
+<div class="top"><div class="wrap"><div class="brand">The Low Post</div><nav id="tabs"></nav></div></div>
 <div class="wrap">
-<header><div class="kicker" id="kick"></div><h1>Low Post Franchise Index</h1>
-<p class="sub">Every NBA franchise from 1991 to 2026, scored on what it built (draft, trades, free agency, contracts, fringe signings) and what it won. Weights are checked by a backtest that only uses information available at the time.</p></header>
+<header><div class="kicker" id="kick"></div><h1>The Low Post Franchise Index</h1><p class="sub">Who built it. Who won it. Every team since 1991.</p><div class="leads" id="leads"></div></header>
 
 <section id="p-rank" hidden>
  <div class="cols">
-  <div class="panel"><h2>Franchise ranking</h2><p class="note">Blend is the average of results and built value, both measured in standard deviations against the rest of the league each season. Click a column to sort, a row to open the team.</p>
+  <div class="panel"><h2>Franchise ranking</h2><p class="note">Blend is results plus built value, each measured against the rest of the league that season. Click a team for its report.</p>
    <div class="tw"><table id="rank"><thead></thead><tbody></tbody></table></div></div>
-  <div class="panel"><h2>Built vs. won</h2><p class="note">Right of center: smart builders. Above center: winners. Larger dots have more titles. Hover for details, click a dot to open the team.</p><svg id="map" viewBox="0 0 440 440" role="img" aria-label="Scatter of built value against results for 30 franchises"></svg></div>
+  <div class="panel"><h2>Built vs. won</h2><p class="note">Right means well built. Up means won. Bigger dot, more banners.</p><svg id="map" viewBox="0 0 440 440" role="img" aria-label="Scatter of built value against results for 30 franchises"></svg></div>
  </div>
 
- <div class="sec panel"><h2>Every season, every team</h2><p class="note">One row per franchise, ranked by blend, one column per season. Green is a better-than-average team, red is worse, gold is a title. Click any cell to open that season.</p><svg id="bc" role="img" aria-label="Heat map of every franchise season since 1991"></svg>
+ <div class="sec panel"><h2>Every season, every team</h2><p class="note">Teams ranked by blend, seasons left to right. Click a cell to open it.</p><svg id="bc" role="img" aria-label="Heat map of every franchise season since 1991"></svg>
   <div class="legend"><span><i style="background:var(--accent)"></i>Above average</span><span><i style="background:var(--bad)"></i>Below average</span><span><i style="background:var(--warn)"></i>Champion</span></div></div>
- <div class="sec panel"><h2>Anatomy of a champion</h2><p class="note">Every title team since 1991, split by how its wins were acquired: drafted, traded for, signed in free agency, or other routes. Based on each roster's top contributors. Click a bar to open the season.</p><div id="anSum" class="callout"></div><svg id="an" role="img" aria-label="Stacked bars of how each champion's wins were acquired"></svg>
+ <div class="sec panel"><h2>Anatomy of a champion</h2><p class="note">Where each champion's wins came from, crediting each player to the way he first joined that franchise. Click a bar to open the season.</p><div id="anSum" class="callout"></div><svg id="an" role="img" aria-label="Stacked bars of how each champion's wins were acquired"></svg>
   <div class="legend" id="anLeg"></div></div>
 </section>
+
+
+<section id="p-report" hidden><div class="panel rep"><div class="row"><select id="repSel" aria-label="Team"></select><button class="chip" id="repSeason" type="button">Season by season &rarr;</button><button class="chip" id="repOff" type="button">Offseason &rarr;</button></div><div id="repBody"></div></div></section>
+
+<section id="p-window" hidden><div class="panel"><h2>Window clock</h2><p class="note" id="winNote"></p><div id="winBody"></div></div></section>
 
 <section id="p-team" hidden>
  <div class="panel"><div class="row"><h2 style="margin:0">Season by season</h2><select id="teamSel" aria-label="Team"></select><button class="chip" id="toOff" type="button">Offseason →</button><label>Bars show <select id="metric" aria-label="Bar metric"><option value="srs">Point differential</option><option value="w82">Wins (82-game pace)</option><option value="playoff_pts">Playoff result</option><option value="results_z">Results score (z)</option></select></label></div>
  <div class="kpis" id="kpis"></div>
- <p class="note">Click any season to open its roster and every move the front office made. Left and right arrow keys step through seasons. Gold bars are championships. The dark line is built value (z).</p>
+ <p class="note">Click a season for the roster and every move. Gold is a title. The black line is built value.</p>
  <svg id="strip" viewBox="0 0 900 280" role="img" aria-label="Season by season results. Click a season for its roster and moves."></svg>
  <div class="legend"><span><i style="background:var(--accent)"></i>Above average</span><span><i style="background:var(--bad)"></i>Below average</span><span><i style="background:var(--warn)"></i>Champion</span><span><i style="background:var(--ink);height:2px;vertical-align:3px"></i>Built value (z)</span></div>
  <div id="detail"></div>
@@ -175,13 +211,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
  <div id="offBody"></div></div></section>
 
 <section id="p-lab" hidden><div class="panel"><h2>Rebuild the ranking</h2>
- <p class="note">Disagree with the weights? Decide what matters. Move the sliders and the whole league re-ranks live. Narrow the window to compare eras. Arrows show movement against the default ranking.</p>
+ <p class="note">Decide what matters. The league re-ranks as you move the sliders. Arrows show movement from the default.</p>
  <div class="lab"><div id="sliders"></div><div id="labOut"></div></div></div></section>
 
-<section id="p-gm" hidden><div class="panel"><h2>General managers and presidents</h2>
- <p class="note">Everyone with at least three seasons in charge. Results and built value are averages in standard deviations. Across 22 executives who ran two different teams, built value did not carry over (rank correlation about -0.4), so treat these as descriptions of a tenure, not forecasts of a person.</p>
- <div class="row"><select id="gmSort" aria-label="Sort executives"><option value="blend">Sort by blend</option><option value="results">Sort by results</option><option value="built">Sort by built value</option></select></div>
- <div class="tw"><table id="gm"><thead><tr><th class="l">Executive</th><th class="l">Team</th><th>Years</th><th>Seasons</th><th>Results</th><th>Draft</th><th>Trades</th><th>Free agency</th><th>Contracts</th><th>Blend</th></tr></thead><tbody></tbody></table></div></div></section>
+<section id="p-gm" hidden><div class="panel"><h2>GM report cards</h2><p class="note">Grades are relative: A is the top 15% of executives with three or more seasons, F is the bottom 15%. Skills are in standard deviations against the league.</p>
+ <div class="row"><select id="gmSort" aria-label="Sort"><option value="blend">Best overall</option><option value="results">Best results</option><option value="draft">Best drafters</option><option value="trades">Best traders</option><option value="fa">Best in free agency</option><option value="contracts">Best with contracts</option></select><span class="chips" id="gmChips" style="margin:0"></span></div>
+ <div class="cards" id="gmCards"></div></div></section>
 
 <section id="p-bt" hidden><div class="panel"><h2>Backtest</h2>
  <p class="note">Each season from 2004 to 2026, the model predicts every team's point differential using only what was known before that season, then gets scored on the real result. Lower error is better. Draft classes count only after five seasons have passed, and trades only after three, so nothing leaks from the future.</p>
@@ -209,10 +244,18 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const season=y=>(y-1)+'–'+String(y).slice(2);
 const poLabel=(p,c)=>c?'Champions':p>=5?'Champions':p>=4?'Lost in the Finals':p>=3?'Lost conference finals':p>=2?'Lost second round':p>=1?'Lost first round':p>=.5?'Play-in only':'Missed playoffs';
 const X=D.x||{players:{},needs:{},metrics:[],off:{moves:[],picks:[],label:'Offseason'},stories:[]};
-const tabs=[['rank','Rankings'],['team','Team detail'],['lab','Rebuild it'],['off',X.off.label.charAt(0).toUpperCase()+X.off.label.slice(1)],['gm','Executives'],['bt','Backtest'],['how','Method']];
+const OFFL=X.off.label.charAt(0).toUpperCase()+X.off.label.slice(1);
+const MENU=[['Home','rank'],['Teams',[['report','Team report'],['team','Season by season'],['window','Window clock']]],['League',[['off',OFFL],['gm','GM report cards'],['lab','Rebuild the ranking']]],['About',[['how','How it works'],['bt','Backtest']]]];
+const tabs=[];MENU.forEach(m=>{if(typeof m[1]==='string')tabs.push([m[1],m[0]]);else m[1].forEach(t=>tabs.push(t))});
 const nav=$('#tabs');
-function show(id){tabs.forEach(([k])=>{$('#p-'+k).hidden=k!==id});[...nav.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.k===id));try{history.replaceState(null,'','#'+id)}catch(e){}}
-tabs.forEach(([k,l])=>{const b=el('button',l);b.dataset.k=k;b.setAttribute('role','tab');b.onclick=()=>show(k);nav.appendChild(b)});
+function show(id){tabs.forEach(([k])=>{$('#p-'+k).hidden=k!==id});$('header').hidden=id!=='rank';
+ nav.querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===id));
+ nav.querySelectorAll('.dd').forEach(d=>{d.classList.remove('open');d.firstChild.setAttribute('aria-selected',!!d.querySelector('[data-k="'+id+'"][aria-selected=true]'))});
+ try{history.replaceState(null,'','#'+id)}catch(e){}}
+MENU.forEach(m=>{if(typeof m[1]==='string'){const b=el('button',m[0]);b.dataset.k=m[1];b.onclick=()=>show(m[1]);nav.appendChild(b)}
+ else{const d=el('div');d.className='dd';const b=el('button',m[0]);b.setAttribute('aria-haspopup','true');b.onclick=e=>{e.stopPropagation();const o=d.classList.contains('open');nav.querySelectorAll('.dd').forEach(x=>x.classList.remove('open'));if(!o)d.classList.add('open')};d.appendChild(b);
+  const mn=el('div');mn.className='menu';m[1].forEach(([k,l])=>{const x=el('button',l);x.dataset.k=k;x.onclick=()=>show(k);mn.appendChild(x)});d.appendChild(mn);nav.appendChild(d)}});
+addEventListener('click',()=>nav.querySelectorAll('.dd').forEach(x=>x.classList.remove('open')));
 // tooltip
 const tip=$('#tip');
 function tipShow(html,ev){tip.innerHTML=html;tip.style.opacity=1;const w=tip.offsetWidth,h=tip.offsetHeight;let x=ev.clientX+14,y=ev.clientY+14;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y+h>innerHeight-8)y=ev.clientY-h-14;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
@@ -224,7 +267,7 @@ function openTeam(t,y){curTeam=t;if(y)curYear=y;else curYear=null;$('#teamSel').
 function drawRank(){
  const th=$('#rank thead');th.innerHTML='';const tr=el('tr');cols.forEach(([k,l])=>{const t=el('th');const b=el('button',l+(sortKey===k?(sortDir>0?' ▲':' ▼'):''));b.onclick=()=>{sortDir=sortKey===k?-sortDir:(k==='tm'||k==='rank'?1:-1);sortKey=k;drawRank()};t.appendChild(b);if(k==='tm')t.className='l';tr.appendChild(t)});th.appendChild(tr);
  const rows=[...D.fs].sort((a,b)=>(a[sortKey]>b[sortKey]?1:-1)*sortDir);const mx=Math.max(...D.fs.map(r=>Math.abs(r.blend)));
- const tb=$('#rank tbody');tb.innerHTML='';rows.forEach(r=>{const t=el('tr');t.className='click';t.innerHTML=`<td class="n">${r.rank}</td><td class="l"><b>${r.tm}</b></td><td class="n ${cls(r.blend)}">${f(r.blend)}<span class="bar" style="width:${Math.abs(r.blend)/mx*46}px;background:var(--${r.blend>=0?'good':'bad'})"></span></td><td class="n ${cls(r.results_score)}">${f(r.results_score)}</td><td class="n ${cls(r.built_score)}">${f(r.built_score)}</td><td class="n">${r.titles||''}</td><td class="n">${(r.win_pct*100).toFixed(1)}</td><td class="n">${f(r.avg_srs,1)}</td>`;t.onclick=()=>openTeam(r.tm);tb.appendChild(t)})}
+ const tb=$('#rank tbody');tb.innerHTML='';rows.forEach(r=>{const t=el('tr');t.className='click';t.innerHTML=`<td class="n">${r.rank}</td><td class="l"><b>${r.tm}</b></td><td class="n ${cls(r.blend)}">${f(r.blend)}<span class="bar" style="width:${Math.abs(r.blend)/mx*46}px;background:var(--${r.blend>=0?'good':'bad'})"></span></td><td class="n ${cls(r.results_score)}">${f(r.results_score)}</td><td class="n ${cls(r.built_score)}">${f(r.built_score)}</td><td class="n">${r.titles||''}</td><td class="n">${(r.win_pct*100).toFixed(1)}</td><td class="n">${f(r.avg_srs,1)}</td>`;t.onclick=()=>openReport(r.tm);tb.appendChild(t)})}
 function drawMap(){
  const s=$('#map'),W=440,H=440,p=34,xs=D.fs.map(r=>r.built_score),ys=D.fs.map(r=>r.results_score);
  const ex=Math.max(.35,...xs.map(Math.abs))*1.15,ey=Math.max(.6,...ys.map(Math.abs))*1.15;
@@ -235,7 +278,7 @@ function drawMap(){
  s.innerHTML=h;
  s.onmousemove=e=>{const c=e.target.closest('circle');if(!c){tipHide();return}const r=D.fs.find(q=>q.tm===c.dataset.t);tipShow(`<b>${r.tm} · #${r.rank}</b>Built ${f(r.built_score)} · Results ${f(r.results_score)}<br>${r.titles} title${r.titles==1?'':'s'} · ${r.wins}–${r.losses}`,e)};
  s.onmouseleave=tipHide;
- s.onclick=e=>{const c=e.target.closest('circle');if(c)openTeam(c.dataset.t)}}
+ s.onclick=e=>{const c=e.target.closest('circle');if(c)openReport(c.dataset.t)}}
 // team
 let curTeam='SAS',curYear=null;
 const teams=D.fs.map(r=>r.tm).sort();teams.forEach(t=>{const o=el('option',t);o.value=t;$('#teamSel').appendChild(o)});$('#teamSel').value=curTeam;
@@ -329,8 +372,7 @@ function detNeeds(z,key){
   h+=`<div>${o.label}</div><div class="dv" title="${f(o.z,2)} SD"><i class="${o.z>=0?'p':'n'}" style="width:${w}%"></i></div><div class="rv">${rk(o)} · ${fmtv(o.m,o.v)}</div>`});
  h+=`</div><p class="hint" style="margin-top:14px">This is only the part of "what they needed" that can be measured. Basketball IQ, coaching, scheme, matchups and injuries to anyone outside the top three are not in these numbers. Offense and defense come from Basketball Reference's team four factors. Roster rows use wins added (a blend of VORP and Win Shares).</p>`;
  return h}
-function drawGM(){const k=$('#gmSort').value,tb=$('#gm tbody');tb.innerHTML='';[...D.gm].sort((a,b)=>b[k]-a[k]).forEach(g=>{const e=el('tr');e.innerHTML=`<td class="l"><b>${g.exec}</b></td><td class="l">${g.tm}</td><td class="n">${g.first}–${g.last}</td><td class="n">${g.seasons}</td><td class="n ${cls(g.results)}">${f(g.results)}</td><td class="n ${cls(g.draft)}">${f(g.draft)}</td><td class="n ${cls(g.trades)}">${f(g.trades)}</td><td class="n ${cls(g.fa)}">${f(g.fa)}</td><td class="n ${cls(g.contracts)}">${f(g.contracts)}</td><td class="n ${cls(g.blend)}"><b>${f(g.blend)}</b></td>`;tb.appendChild(e)})}
-$('#gmSort').onchange=drawGM;
+
 $('#bt tbody').innerHTML=D.bt.map(r=>`<tr><td class="l">${r.model}</td><td class="n">${r.rmse_srs.toFixed(3)}</td><td class="n ${r.r2_vs_avg>0.17?'pos':''}">${(r.r2_vs_avg*100).toFixed(1)}%</td></tr>`).join('');
 $('#pen tbody').innerHTML=D.pen.map(r=>`<tr><td class="l"><b>${r.team}</b></td><td class="n">${r.draft_year}</td><td class="n">${r.round}</td><td class="l" style="white-space:normal;min-width:240px">${r.note}</td></tr>`).join('');
 // offseason
@@ -357,7 +399,7 @@ function drawOff(){
  $('#offBody').innerHTML=h;
  $('#offBody').querySelectorAll('.tm').forEach(b=>b.onclick=()=>{offTeam=b.dataset.t;offKind='All';drawOff();scrollTo({top:0})})}
 $('#toOff').onclick=()=>{offTeam=curTeam;offKind='All';drawOff();show('off');scrollTo({top:0})};
-drawRank();drawMap();drawTeam();drawGM();drawOff();
+drawRank();drawMap();drawTeam();drawOff();
 // ---- data-desk extras ----
 $('#kick').textContent='Franchise data desk \u00b7 30 teams \u00b7 1991\u20132026 \u00b7 updated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 const zcol=v=>{const t=Math.max(-1,Math.min(1,v/1.6));return t>=0?`rgba(13,107,69,${.12+.88*t})`:`rgba(180,65,47,${.12+.88*-t})`};
@@ -400,6 +442,73 @@ function drawLab(){
  const R=labScore(lw,ly[0],ly[1]),mx=Math.max(.01,...R.map(r=>Math.abs(r.v)));
  $('#labOut').innerHTML=R.map((r,i)=>{const d=labBase[r.tm]-(i+1);return `<div class="lr"><span class="n" style="font:12px var(--mono)">${i+1}</span><b data-t="${r.tm}">${r.tm}</b><div class="tr"><i style="${r.v>=0?'left:50%':'right:50%'};width:${Math.abs(r.v)/mx*50}%;background:var(--${r.v>=0?'good':'bad'})"></i></div><span class="d ${d>0?'pos':d<0?'neg':''}">${d>0?'\u25b2'+d:d<0?'\u25bc'+(-d):'\u2013'}</span></div>`}).join('');
  $('#labOut').querySelectorAll('b[data-t]').forEach(b=>b.onclick=()=>openTeam(b.dataset.t))}
+
+// ---- v6: report, window clock, GM cards, front page ----
+const LASTY=Math.max(...D.z.map(z=>z.year)),CURVE=X.curve||{};
+const dAge=a=>{a=Math.max(19,Math.min(38,Math.round(a)));return CURVE[a]!=null?CURVE[a]:(a>=30?-.8:.3)};
+const coreOf=tm=>((X.players||{})[tm+'|'+LASTY]||[]).filter(p=>p[5]!=null).sort((a,b)=>b[5]-a[5]).slice(0,8);
+function project(c,n=6){const q=c.map(p=>({age:p[1]==null?26:p[1],w:Math.max(0,p[5])}));const out=[q.reduce((a,p)=>a+p.w,0)];for(let t=1;t<=n;t++){q.forEach(p=>{p.w=Math.max(0,p.w+dAge(p.age+t-1))});out.push(q.reduce((a,p)=>a+p.w,0))}return out}
+const WIN={};D.fs.forEach(r=>{const c=coreOf(r.tm);if(!c.length)return;WIN[r.tm]={c,p:project(c),age:c.reduce((a,x)=>a+(x[1]||26),0)/c.length}});
+const v0s=Object.values(WIN).map(w=>w.p[0]).sort((a,b)=>a-b),TOP=v0s[Math.floor(v0s.length*.67)],VMAX=Math.max(...Object.values(WIN).map(w=>Math.max(...w.p)));
+Object.values(WIN).forEach(w=>{const p=w.p;w.label=p[0]>=TOP?(p[3]<=.8*p[0]?'Closing':'Contending'):(p[3]>=1.1*p[0]?'Rising':'Rebuilding');
+ if(p[0]>=TOP){let t=0;while(t<6&&p[t+1]>=TOP)t++;w.txt=t>=6?`In the window through ${LASTY+6}+`:`In the window through ${LASTY+t}`}
+ else{const t=p.findIndex(v=>v>=TOP);w.txt=t>0?`Window opens ${LASTY+t}`:'No window on the current core'}});
+const fy=y=>(y-1)+'–'+String(y).slice(2);
+function spark(w,h=38,W=190){const n=w.p.length,bw=W/n;let o=`<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="none">`;const yy=v=>h-2-(v/VMAX)*(h-6);
+ w.p.forEach((v,i)=>{o+=`<rect x="${i*bw+2}" y="${yy(v)}" width="${bw-4}" height="${h-2-yy(v)}" fill="${v>=TOP?'var(--accent)':'#b9b3a0'}"/>`});
+ return o+`<line x1="0" x2="${W}" y1="${yy(TOP)}" y2="${yy(TOP)}" stroke="var(--ink)" stroke-dasharray="3 3"/></svg>`}
+function openReport(t){repTeam=t;$('#repSel').value=t;drawReport();show('report');scrollTo({top:0})}
+let repTeam='SAS';
+const sel0=$('#repSel');teams.forEach(t=>{const o=el('option',t);o.value=t;sel0.appendChild(o)});sel0.value=repTeam;sel0.onchange=()=>{repTeam=sel0.value;drawReport()};
+$('#repSeason').onclick=()=>openTeam(repTeam,LASTY);$('#repOff').onclick=()=>{offTeam=repTeam;offKind='All';drawOff();show('off');scrollTo({top:0})};
+// grades
+const GBL=D.gm.map(g=>g.blend).sort((a,b)=>a-b),gpct=v=>GBL.filter(x=>x<=v).length/GBL.length;
+const grade=v=>{const p=gpct(v);return p>=.85?'A':p>=.6?'B':p>=.35?'C':p>=.15?'D':'F'};
+const SK=[['results','Results'],['draft','Draft'],['trades','Trades'],['fa','Free agency'],['contracts','Contracts']];
+function mbar(v,mx){const w=Math.min(Math.abs(v)/mx,1)*50;return `<div class="dv"><i class="${v>=0?'p':'n'}" style="width:${w}%"></i></div>`}
+function drawReport(){
+ const tm=repTeam,key=tm+'|'+LASTY,n=(X.needs||{})[key],z=D.z.find(q=>q.tm===tm&&q.year===LASTY),fr=D.fs.find(r=>r.tm===tm),w=WIN[tm];
+ if(!n||!z){$('#repBody').innerHTML='<p class="note">No current-season data.</p>';return}
+ const items=X.metrics.map((m,i)=>({m,label:m[1],z:n.z[i],r:n.r[i],v:n.v[i]})).filter(o=>o.z!=null).sort((a,b)=>a.z-b.z);
+ const weak=items.filter(o=>o.z<-.2).slice(0,3),strong=items.filter(o=>o.z>.2).reverse().slice(0,3);
+ const res=poLabel(z.playoff_pts,z.champ).toLowerCase();
+ const head=z.champ?`${tm} won it all, and ${strong.length?strong[0].label.toLowerCase()+' was the edge':'there was no single edge'}.`:weak.length?`${tm}'s problem: ${weak[0].label.toLowerCase()}.`:`${tm} had no glaring hole.`;
+ const gm=D.gm.find(g=>g.tm===tm&&g.last>=LASTY);
+ const deck=`${fy(LASTY)}: ${z.wins}–${z.losses}, ${res}${n.by?' ('+n.by+')':''}. `+(weak.length?`Ranked #${weak[0].r} of 30 in ${weak[0].label.toLowerCase()}.`:'')+(w?` Window: ${w.txt.toLowerCase()}.`:'');
+ const mr=o=>`<div class="mr"><span>${o.label}</span><span class="rv">#${o.r} · ${fmtv(o.m,o.v)}</span>${mbar(o.z,2.5)}</div>`;
+ const core=w?w.c.slice(0,6).map(p=>{const d=dAge((p[1]==null?26:p[1]));return `<div class="pl"><b>${esc(p[0])}</b><span>${p[1]||''}</span><span>${f(p[5],1)}</span><span class="${cls(d)}">${f(d,1)} next</span></div>`}).join(''):'';
+ const O=X.off,mv=O.moves.filter(m=>m.t.includes(tm)),pk=O.picks.filter(p=>p.t===tm),tr=mv.filter(m=>m.k==='Trade').slice(0,3);
+ const st=(X.stories||[]).filter(q=>q.team===tm);
+ const off=`<div class="mr" style="grid-template-columns:1fr"><span>${pk.length} draft pick${pk.length==1?'':'s'}${pk.length?': '+pk.slice(0,3).map(p=>'#'+p.n+' '+esc(p.p)).join(', '):''}</span></div><div class="mr" style="grid-template-columns:1fr"><span>${mv.filter(m=>m.k==='Trade').length} trades, ${mv.filter(m=>m.k==='Signing'||m.k==='Extension').length} signings and extensions, ${mv.filter(m=>m.k==='Staff').length} staff moves</span></div>`+tr.map(m=>`<div class="mr" style="grid-template-columns:1fr;color:var(--ink2)"><span>${fmtD(m.d,m.dl)}: ${esc(m.x.length>150?m.x.slice(0,150)+'…':m.x)}</span></div>`).join('')+st.map(q=>`<div class="callout bad" style="margin-top:8px"><b>${esc(q.title)}</b></div>`).join('');
+ $('#repBody').innerHTML=`<h2>${esc(head)}</h2><p class="deck">${deck}</p>
+ <div class="rgrid"><div><h3>What is broken</h3>${weak.length?weak.map(mr).join(''):'<p class="note">Nothing below league average by a clear margin.</p>'}<h3 style="margin-top:20px">What works</h3>${strong.map(mr).join('')}</div>
+ <div><h3>The core and where it is headed</h3>${w?`<div class="pl" style="color:var(--ink2);font:600 10px var(--body);text-transform:uppercase"><span style="text-align:left;font:inherit">Player</span><span style="font:inherit">Age</span><span style="font:inherit">WA</span><span style="font:inherit">Trend</span></div>${core}<h3 style="margin-top:20px">Window clock <span class="pill ${w.label}">${w.label}</span></h3><p class="note" style="margin:0 0 6px">${w.txt}.</p>${spark(w,60,300)}<div class="hint">${fy(LASTY)} to ${fy(LASTY+6)}. Dashed line is contender level.</div>`:''}</div>
+ <div><h3>${OFFL}</h3>${off}<h3 style="margin-top:20px">Front office</h3><p class="note" style="margin:0">${gm?`<b>${esc(gm.exec)}</b>, grade ${grade(gm.blend)} (${gm.seasons} seasons). Strongest at ${SK.slice().sort((a,b)=>gm[b[0]]-gm[a[0]])[0][1].toLowerCase()}, weakest at ${SK.slice().sort((a,b)=>gm[a[0]]-gm[b[0]])[0][1].toLowerCase()}.`:(z.exec_build?esc(z.exec_build)+' built this roster.':'No executive with three or more seasons on record.')}</p></div></div>
+ <p class="hint" style="margin-top:20px">Standing and profile are from ${fy(LASTY)}, ranked against all 30 teams. Bars are standard deviations from league average.</p>`}
+function drawWindow(){
+ $('#winNote').textContent=`Each team's eight best players by wins added in ${fy(LASTY)}, aged forward using how players actually changed from one season to the next. Dashed line marks contender level. It leaves out future draft picks, trades and signings, so read it as the clock on the current core.`;
+ const ord={Contending:0,Rising:1,Closing:2,Rebuilding:3};
+ const rows=Object.entries(WIN).sort((a,b)=>ord[a[1].label]-ord[b[1].label]||b[1].p[0]-a[1].p[0]);
+ $('#winBody').innerHTML=rows.map(([t,w])=>`<div class="wrow" data-t="${t}"><b class="t">${t}</b><span><span class="pill ${w.label}">${w.label}</span></span>${spark(w)}<span>${w.txt}. Core age ${w.age.toFixed(1)}, ${w.p[0].toFixed(0)} wins added now, ${w.p[3].toFixed(0)} in three years.</span></div>`).join('');
+ $('#winBody').querySelectorAll('.wrow').forEach(r=>r.onclick=()=>openReport(r.dataset.t))}
+let gmFilter='All';
+function drawGM(){
+ const k=$('#gmSort').value,cur=g=>g.last>=LASTY,gd=g=>grade(g.blend);
+ const chips=[['All',D.gm.length],['Current',D.gm.filter(cur).length],['Hot seat',D.gm.filter(g=>cur(g)&&'DF'.includes(gd(g))).length],['A grades',D.gm.filter(g=>gd(g)==='A').length]];
+ $('#gmChips').innerHTML=chips.map(([c,n])=>`<button class="chip" aria-pressed="${gmFilter===c}" data-c="${c}">${c} (${n})</button>`).join('');
+ $('#gmChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{gmFilter=b.dataset.c;drawGM()});
+ const L=D.gm.filter(g=>gmFilter==='All'||(gmFilter==='Current'&&cur(g))||(gmFilter==='Hot seat'&&cur(g)&&'DF'.includes(gd(g)))||(gmFilter==='A grades'&&gd(g)==='A')).sort((a,b)=>b[k]-a[k]);
+ $('#gmCards').innerHTML=L.map(g=>{const sk=SK.map(([c,l])=>[l,g[c]]),best=[...sk].sort((a,b)=>b[1]-a[1])[0],worst=[...sk].sort((a,b)=>a[1]-b[1])[0];
+  return `<div class="gc" data-t="${g.tm}"><div class="gl ${gd(g)}">${gd(g)}</div><div><h3>${esc(g.exec)}${cur(g)?(('DF'.includes(gd(g)))?'<span class="tagp">Hot seat</span>':'<span class="tagp" style="color:var(--accent)">Current</span>'):''}</h3><div class="m">${g.tm} · ${g.first}–${g.last} · ${g.seasons} seasons · blend ${f(g.blend)}</div>
+  <div class="sk">${sk.map(([l,v])=>`<div>${l}${mbar(v,1.5)}<em>${f(v)}</em></div>`).join('')}</div>
+  <p>Best at ${best[0].toLowerCase()} (${f(best[1])}). Worst at ${worst[0].toLowerCase()} (${f(worst[1])}).</p></div></div>`}).join('');
+ $('#gmCards').querySelectorAll('.gc').forEach(c=>c.onclick=()=>openReport(c.dataset.t))}
+$('#gmSort').onchange=drawGM;
+// front page strip
+(function(){const by=(k)=>[...D.fs].sort((a,b)=>b[k]-a[k])[0],bg=[...D.gm].sort((a,b)=>b.blend-a.blend)[0],ch=D.z.find(q=>q.champ&&q.year===LASTY),rise=Object.entries(WIN).sort((a,b)=>b[1].p[4]-a[1].p[4])[0];
+ const L=[['Best overall',by('blend').tm,'blend '+f(by('blend').blend),()=>openReport(by('blend').tm)],['Best builder',by('built_score').tm,'built '+f(by('built_score').built_score),()=>openReport(by('built_score').tm)],['Most banners',by('titles').tm,by('titles').titles+' titles',()=>openReport(by('titles').tm)],['Top executive',bg.exec.split(' ').slice(-1)[0],bg.tm+', '+bg.seasons+' seasons',()=>show('gm')],['Defending champ',ch?ch.tm:'–',fy(LASTY),()=>ch&&openReport(ch.tm)],[`Best core by ${LASTY+4}`,rise[0],rise[1].label.toLowerCase(),()=>show('window')]];
+ $('#leads').innerHTML=L.map((l,i)=>`<div data-i="${i}"><span>${l[0]}</span><b>${l[1]}</b><small>${l[2]}</small></div>`).join('');$('#leads').querySelectorAll('div').forEach(d=>d.onclick=L[+d.dataset.i][3])})();
+drawReport();drawWindow();drawGM();
 drawBarcode();drawAnatomy();drawLab();
 
 const h0=(location.hash||'').replace('#','');show(tabs.some(t=>t[0]===h0)?h0:'rank');
