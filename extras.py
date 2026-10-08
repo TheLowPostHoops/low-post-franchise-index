@@ -100,5 +100,14 @@ if os.path.exists(dp):
     off["picks"] = [{"n": int(r.pick), "t": fr(r.tm), "p": str(r.player)} for r in dr.itertuples() if str(r.player) != "nan"]
 sp = os.path.join(DATA, "storylines.json")
 stories = [s for s in json.load(open(sp)) if s.get("year", off_end - 1) == off_end - 1] if os.path.exists(sp) else []
-json.dump({"players": players, "needs": needs, "metrics": [[m[0], m[1], m[2], m[4], m[5]] for m in METRICS], "off": off, "stories": stories}, open(os.path.join(OUT, "extras.json"), "w"), separators=(",", ":"), ensure_ascii=False)
+# ---------------- aging curve: how much a player's wins added changes from one season to the next, by age ----------------
+A = P.groupby(["pid", "year"]).agg(wa=("wa", "sum"), mp=("mp", "sum"), age=("age", "min")).reset_index()
+last_y = int(A.year.max()); A = A[A.mp >= 1000]
+nxt = P.groupby(["pid", "year"]).wa.sum().rename("wa_next").reset_index(); nxt["year"] -= 1
+A = A[A.year < last_y].merge(nxt, on=["pid", "year"], how="left"); A["wa_next"] = A.wa_next.fillna(0)     # left the league = 0
+A["d"] = A.wa_next - A.wa; A["age"] = A.age.clip(19, 38).round()
+cv = A.groupby("age").d.agg(["mean", "count"]); cv = cv[cv["count"] >= 15]
+curve = {int(a): round(float(v), 2) for a, v in cv["mean"].rolling(3, center=True, min_periods=1).mean().items()}
+
+json.dump({"players": players, "needs": needs, "metrics": [[m[0], m[1], m[2], m[4], m[5]] for m in METRICS], "off": off, "stories": stories, "curve": curve}, open(os.path.join(OUT, "extras.json"), "w"), separators=(",", ":"), ensure_ascii=False)
 print(f"extras.json written: {len(players)} rosters, {len(needs)} profiles, {len(off['moves'])} offseason moves, {len(off['picks'])} picks")
